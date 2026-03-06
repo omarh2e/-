@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قاموس البحث الذكي</title>
+    <title>معاني الكلمات - النسخة الاحترافية</title>
     <style>
         :root {
             --bg-body: #f8fafc;
@@ -40,9 +40,9 @@
         }
 
         .app-container {
-            width: 90%;
+            width: 95%;
             max-width: 600px;
-            padding: 50px 0;
+            padding: 40px 0;
             flex-grow: 1;
         }
 
@@ -53,7 +53,6 @@
             margin-bottom: 30px;
         }
 
-        /* حاوية البحث */
         .search-container {
             position: relative;
             display: flex;
@@ -71,7 +70,7 @@
             color: var(--text-content);
             outline: none;
             box-shadow: var(--shadow);
-            transition: 0.3s;
+            transition: border-color 0.3s;
         }
 
         input#wordInput:focus { border-color: var(--text-word); }
@@ -86,7 +85,6 @@
             cursor: pointer;
         }
 
-        /* قائمة الاقتراحات والسجل */
         .dropdown-menu {
             position: absolute;
             top: 100%;
@@ -98,7 +96,7 @@
             z-index: 1000;
             margin-top: 8px;
             display: none;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
             border: 1px solid rgba(0,0,0,0.1);
         }
@@ -109,13 +107,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
-        .dropdown-item:hover { background: rgba(46, 204, 113, 0.1); }
-        .dropdown-item.history-item::before { content: "🕒"; font-size: 0.9rem; }
-        .dropdown-item.suggest-item::before { content: "🔍"; font-size: 0.9rem; }
+        .dropdown-item:hover { background: rgba(46, 204, 113, 0.1); color: var(--text-word); }
+        .dropdown-item.history-item::before { content: "🕒"; }
+        .dropdown-item.suggest-item::before { content: "🔍"; }
 
-        /* نتائج البحث */
         .result-card {
             background: var(--bg-card);
             padding: 30px;
@@ -123,15 +121,14 @@
             box-shadow: var(--shadow);
             margin-top: 30px;
             border-right: 8px solid var(--text-word);
-            animation: slideUp 0.4s ease;
+            animation: fadeIn 0.4s ease;
         }
 
         .result-card h2 { color: var(--text-word); font-size: 2.2rem; margin: 0 0 20px 0; }
-        .sentence-box { margin-bottom: 20px; }
-        .label { display: block; color: var(--text-labels); font-weight: bold; margin-bottom: 5px; }
-        .content { font-size: 1.3rem; line-height: 1.6; }
+        .sentence-box { margin-bottom: 25px; }
+        .label { display: block; color: var(--text-labels); font-weight: bold; margin-bottom: 5px; font-size: 1.1rem; }
+        .content { font-size: 1.4rem; line-height: 1.7; display: block; }
 
-        /* Spinner */
         .loader {
             display: none;
             width: 30px;
@@ -144,16 +141,7 @@
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .theme-toggle {
-            background: var(--bg-card);
-            border: 1px solid #ddd;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            color: var(--text-content);
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         footer { padding: 20px; font-size: 0.8rem; color: var(--footer-color); text-align: center; }
     </style>
@@ -163,7 +151,7 @@
 <div class="app-container">
     <div class="header">
         <h1>معاني الكلمات</h1>
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">الوضع الليلي</button>
+        <button onclick="toggleTheme()" id="themeBtn" style="background:var(--bg-card); border:1px solid #ddd; padding:8px 15px; border-radius:20px; cursor:pointer; color:var(--text-content); font-weight:bold;">الوضع الليلي</button>
     </div>
 
     <div class="search-container">
@@ -187,7 +175,6 @@
     const resultArea = document.getElementById('resultArea');
     const loader = document.getElementById('loader');
 
-    // --- سجل البحث (LocalStorage) ---
     function getHistory() {
         return JSON.parse(localStorage.getItem('searchHistory') || '[]');
     }
@@ -198,25 +185,35 @@
         localStorage.setItem('searchHistory', JSON.stringify(history.slice(0, 7)));
     }
 
-    // --- عرض القائمة المنسدلة ---
+    // إظهار السجل عند الضغط على الخانة الفارغة
     input.addEventListener('focus', () => {
         if (!input.value.trim()) showHistory();
     });
 
+    // جلب الاقتراحات مع فلترة دقيقة
     input.addEventListener('input', async () => {
-        const val = input.value.trim();
-        if (val.length < 2) {
-            dropdown.style.display = val.length === 0 ? 'block' : 'none';
-            if (val.length === 0) showHistory();
+        const val = input.value.trim().toLowerCase();
+        
+        if (!val) {
+            showHistory();
             return;
         }
-        
-        // جلب الاقتراحات من API
+
+        if (val.length < 2) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
         try {
             const res = await fetch(`${API_URL}?suggest=${encodeURIComponent(val)}`);
             const suggestions = await res.json();
-            renderDropdown(suggestions, 'suggest-item');
-        } catch (e) { console.error("Suggest error"); }
+            
+            // فلترة لضمان أن الاقتراحات تبدأ فعلياً بالحروف المدخلة
+            const filtered = suggestions.filter(s => s.toLowerCase().startsWith(val));
+            renderDropdown(filtered, 'suggest-item');
+        } catch (e) {
+            console.error("Suggest error");
+        }
     });
 
     function showHistory() {
@@ -227,7 +224,10 @@
 
     function renderDropdown(items, className) {
         dropdown.innerHTML = '';
-        if (items.length === 0) { dropdown.style.display = 'none'; return; }
+        if (items.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
         
         items.forEach(item => {
             const div = document.createElement('div');
@@ -235,7 +235,7 @@
             div.textContent = item;
             div.onclick = () => {
                 input.value = item;
-                dropdown.style.display = 'none';
+                dropdown.style.display = 'none'; // إخفاء القائمة فور الاختيار
                 handleSearch();
             };
             dropdown.appendChild(div);
@@ -243,11 +243,11 @@
         dropdown.style.display = 'block';
     }
 
-    // --- عملية البحث الكاملة ---
     async function handleSearch() {
         const query = input.value.trim();
         if (!query) return;
 
+        // إخفاء القائمة فور البدء بالبحث لمنع بقائها على الشاشة
         dropdown.style.display = 'none';
         resultArea.innerHTML = '';
         loader.style.display = 'block';
@@ -273,17 +273,19 @@
                     </div>
                 `;
             } else {
-                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">الكلمة غير موجودة</p>`;
+                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">عذراً، الكلمة غير موجودة.</p>`;
             }
         } catch (e) {
             loader.style.display = 'none';
-            resultArea.innerHTML = `<p style="color:red; text-align:center;">خطأ في الاتصال</p>`;
+            resultArea.innerHTML = `<p style="color:red; text-align:center;">خطأ في الاتصال بالخادم.</p>`;
         }
     }
 
-    // إغلاق القائمة عند الضغط خارجها
+    // إغلاق القائمة عند النقر خارج منطقة البحث
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')) dropdown.style.display = 'none';
+        if (!e.target.closest('.search-container')) {
+            dropdown.style.display = 'none';
+        }
     });
 
     function toggleTheme() {
@@ -293,7 +295,13 @@
         document.getElementById('themeBtn').innerText = isDark ? "الوضع الليلي" : "الوضع النهاري";
     }
 
-    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
+    // دعم البحث عند ضغط Enter مع إخفاء القائمة
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            dropdown.style.display = 'none';
+            handleSearch();
+        }
+    });
 </script>
 
 </body>
