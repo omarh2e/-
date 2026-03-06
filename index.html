@@ -157,11 +157,11 @@
 <div class="app-container">
     <div class="header">
         <h1>معاني الكلمات</h1>
-        <button onclick="toggleTheme()" id="themeBtn" style="background:var(--bg-card); border:1px solid #ddd; padding:8px 15px; border-radius:20px; cursor:pointer; color:var(--text-content); font-weight:bold;">الوضع الليلي</button>
+        <button onclick="toggleTheme()" id="themeBtn" style="background: rgba(46,204,113,0.15); border: 1.5px solid rgba(46,204,113,0.4); padding:8px 15px; border-radius:20px; cursor:pointer; color: #2ecc71; font-weight:bold;">الوضع المظلم</button>
     </div>
 
     <div class="search-container">
-        <input type="text" id="wordInput" placeholder="ابحث عن كلمة..." autocomplete="off">
+        <input type="text" id="wordInput" placeholder="أكتب كلمة..." autocomplete="off">
         <button id="searchBtn" onclick="handleSearch()">بحث</button>
         <div id="dropdownMenu" class="dropdown-menu"></div>
     </div>
@@ -170,9 +170,6 @@
     <div id="resultArea"></div>
 </div>
 
-<footer>
-    سياسة الخصوصية: يتم حفظ تفضيلاتك وسجل بحثك محلياً فقط.
-</footer>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwRF6ZycN-hWpqWu2LW3LaU3Bgf7mQhJeORX6xKiXJ0EKInKU6weTgfZYrANBDt6Lnc/exec";
@@ -181,7 +178,7 @@
     const resultArea = document.getElementById('resultArea');
     const loader = document.getElementById('loader');
 
-    // متغير لتتبع حالة القائمة
+    // Track dropdown state
     let dropdownOpen = false;
 
     const historyIconSVG = `<svg class="history-icon" viewBox="0 0 24 24"><path d="M12 8V12L15 15" /><circle cx="12" cy="12" r="9" /><path d="M3.05 11a9 9 0 0 1 .5-2M3.05 11H1V5" transform="translate(0,0)"/></svg>`;
@@ -189,7 +186,7 @@
     function applySavedTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? "الوضع النهاري" : "الوضع الليلي";
+        document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? "الوضع الفاتح" : "الوضع المظلم";
     }
 
     function toggleTheme() {
@@ -197,7 +194,7 @@
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
-        document.getElementById('themeBtn').innerText = newTheme === 'dark' ? "الوضع النهاري" : "الوضع الليلي";
+        document.getElementById('themeBtn').innerText = newTheme === 'dark' ? "الوضع الفاتح" : "الوضع المظلم";
     }
 
     function getHistory() { return JSON.parse(localStorage.getItem('searchHistory') || '[]'); }
@@ -245,7 +242,7 @@
             const div = document.createElement('div');
             div.className = `dropdown-item ${className}`;
             div.innerHTML = (className === 'history-item' ? historyIconSVG : '') + `<span>${item}</span>`;
-            // ✅ استخدام mousedown/touchstart بدل onclick حتى يُنفَّذ قبل blur
+            // Use mousedown/touchstart instead of onclick to fire before blur
             div.addEventListener('mousedown', (e) => { e.preventDefault(); });
             div.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
             div.addEventListener('click', () => {
@@ -263,11 +260,11 @@
         const query = input.value.trim();
         if (!query) return;
 
-        // ✅ إغلاق القائمة فوراً + إخفاء لوحة المفاتيح على الموبايل
+        // Close dropdown and hide keyboard on mobile
         closeDropdown();
         input.blur();
 
-        // ✅ أظهر النتيجة القديمة فوراً مع Loader بدلاً من مسحها
+        // Show old result with opacity while loading instead of clearing it
         loader.style.display = 'block';
         resultArea.style.opacity = '0.3';
 
@@ -283,28 +280,28 @@
                     <div class="result-card">
                         <h2>${data.word}</h2>
                         <div class="sentence-box">
-                            <span class="label">الجملة الأولى:</span>
+                            <span class="label">First Sentence:</span>
                             <span class="content">${data.sentence1 || ''}</span>
                         </div>
                         <div class="sentence-box">
-                            <span class="label">الجملة الثانية:</span>
+                            <span class="label">Second Sentence:</span>
                             <span class="content">${data.sentence2 || ''}</span>
                         </div>
                     </div>
                 `;
             } else {
-                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">الكلمة غير موجودة.</p>`;
+                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">Word not found.</p>`;
             }
         } catch (e) {
             loader.style.display = 'none';
             resultArea.style.opacity = '1';
-            resultArea.innerHTML = `<p style="color:red; text-align:center;">خطأ في الاتصال.</p>`;
+            resultArea.innerHTML = `<p style="color:red; text-align:center;">Connection error.</p>`;
         }
     }
 
     applySavedTheme();
 
-    // ✅ إغلاق القائمة عند الضغط في أي مكان خارجها
+    // Close dropdown when clicking anywhere outside
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.search-container')) closeDropdown();
     });
