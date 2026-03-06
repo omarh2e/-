@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>معاني الكلمات - النسخة الاحترافية</title>
+    <title>معاني الكلمات</title>
     <style>
         :root {
             --bg-body: #f8fafc;
@@ -37,6 +37,7 @@
             align-items: center;
             min-height: 100vh;
             direction: rtl;
+            transition: background 0.3s;
         }
 
         .app-container {
@@ -70,10 +71,7 @@
             color: var(--text-content);
             outline: none;
             box-shadow: var(--shadow);
-            transition: border-color 0.3s;
         }
-
-        input#wordInput:focus { border-color: var(--text-word); }
 
         button#searchBtn {
             padding: 0 25px;
@@ -106,13 +104,22 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
         .dropdown-item:hover { background: rgba(46, 204, 113, 0.1); color: var(--text-word); }
-        .dropdown-item.history-item::before { content: "🕒"; }
-        .dropdown-item.suggest-item::before { content: "🔍"; }
+
+        /* أيقونة السجل (YouTube Style) باستخدام SVG */
+        .history-icon {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: #888;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
         .result-card {
             background: var(--bg-card);
@@ -126,7 +133,7 @@
 
         .result-card h2 { color: var(--text-word); font-size: 2.2rem; margin: 0 0 20px 0; }
         .sentence-box { margin-bottom: 25px; }
-        .label { display: block; color: var(--text-labels); font-weight: bold; margin-bottom: 5px; font-size: 1.1rem; }
+        .label { display: block; color: var(--text-labels); font-weight: bold; margin-bottom: 5px; }
         .content { font-size: 1.4rem; line-height: 1.7; display: block; }
 
         .loader {
@@ -165,7 +172,7 @@
 </div>
 
 <footer>
-    سياسة الخصوصية: التطبيق يحفظ سجل بحثك محلياً على جهازك فقط ولا يجمع بيانات شخصية.
+    سياسة الخصوصية: يتم حفظ تفضيلاتك وسجل بحثك محلياً فقط.
 </footer>
 
 <script>
@@ -175,9 +182,24 @@
     const resultArea = document.getElementById('resultArea');
     const loader = document.getElementById('loader');
 
-    function getHistory() {
-        return JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    // أيقونة السجل البرمجية (YouTube Style)
+    const historyIconSVG = `<svg class="history-icon" viewBox="0 0 24 24"><path d="M12 8V12L15 15" /><circle cx="12" cy="12" r="9" /><path d="M3.05 11a9 9 0 0 1 .5-2M3.05 11H1V5" transform="translate(0,0)"/></svg>`;
+
+    function applySavedTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? "الوضع النهاري" : "الوضع الليلي";
     }
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        document.getElementById('themeBtn').innerText = newTheme === 'dark' ? "الوضع النهاري" : "الوضع الليلي";
+    }
+
+    function getHistory() { return JSON.parse(localStorage.getItem('searchHistory') || '[]'); }
 
     function addToHistory(word) {
         let history = getHistory().filter(w => w !== word);
@@ -185,57 +207,44 @@
         localStorage.setItem('searchHistory', JSON.stringify(history.slice(0, 7)));
     }
 
-    // إظهار السجل عند الضغط على الخانة الفارغة
-    input.addEventListener('focus', () => {
-        if (!input.value.trim()) showHistory();
-    });
+    function closeDropdown() {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+    }
 
-    // جلب الاقتراحات مع فلترة دقيقة
+    input.addEventListener('focus', () => { if (!input.value.trim()) showHistory(); });
+
     input.addEventListener('input', async () => {
         const val = input.value.trim().toLowerCase();
-        
-        if (!val) {
-            showHistory();
-            return;
-        }
-
-        if (val.length < 2) {
-            dropdown.style.display = 'none';
-            return;
-        }
+        if (!val) { showHistory(); return; }
+        if (val.length < 2) { closeDropdown(); return; }
 
         try {
             const res = await fetch(`${API_URL}?suggest=${encodeURIComponent(val)}`);
             const suggestions = await res.json();
-            
-            // فلترة لضمان أن الاقتراحات تبدأ فعلياً بالحروف المدخلة
             const filtered = suggestions.filter(s => s.toLowerCase().startsWith(val));
             renderDropdown(filtered, 'suggest-item');
-        } catch (e) {
-            console.error("Suggest error");
-        }
+        } catch (e) { console.error("API error"); }
     });
 
     function showHistory() {
         const history = getHistory();
         if (history.length > 0) renderDropdown(history, 'history-item');
-        else dropdown.style.display = 'none';
+        else closeDropdown();
     }
 
     function renderDropdown(items, className) {
         dropdown.innerHTML = '';
-        if (items.length === 0) {
-            dropdown.style.display = 'none';
-            return;
-        }
+        if (items.length === 0) { closeDropdown(); return; }
         
         items.forEach(item => {
             const div = document.createElement('div');
             div.className = `dropdown-item ${className}`;
-            div.textContent = item;
+            // إضافة الأيقونة فقط إذا كان العنصر من السجل
+            div.innerHTML = (className === 'history-item' ? historyIconSVG : '') + `<span>${item}</span>`;
             div.onclick = () => {
                 input.value = item;
-                dropdown.style.display = 'none'; // إخفاء القائمة فور الاختيار
+                closeDropdown();
                 handleSearch();
             };
             dropdown.appendChild(div);
@@ -247,8 +256,7 @@
         const query = input.value.trim();
         if (!query) return;
 
-        // إخفاء القائمة فور البدء بالبحث لمنع بقائها على الشاشة
-        dropdown.style.display = 'none';
+        closeDropdown();
         resultArea.innerHTML = '';
         loader.style.display = 'block';
 
@@ -273,36 +281,24 @@
                     </div>
                 `;
             } else {
-                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">عذراً، الكلمة غير موجودة.</p>`;
+                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">الكلمة غير موجودة.</p>`;
             }
         } catch (e) {
             loader.style.display = 'none';
-            resultArea.innerHTML = `<p style="color:red; text-align:center;">خطأ في الاتصال بالخادم.</p>`;
+            resultArea.innerHTML = `<p style="color:red; text-align:center;">خطأ في الاتصال.</p>`;
         }
     }
 
-    // إغلاق القائمة عند النقر خارج منطقة البحث
+    applySavedTheme();
+
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')) {
-            dropdown.style.display = 'none';
-        }
+        if (!e.target.closest('.search-container')) closeDropdown();
     });
 
-    function toggleTheme() {
-        const html = document.documentElement;
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-        document.getElementById('themeBtn').innerText = isDark ? "الوضع الليلي" : "الوضع النهاري";
-    }
-
-    // دعم البحث عند ضغط Enter مع إخفاء القائمة
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            dropdown.style.display = 'none';
-            handleSearch();
-        }
+        if (e.key === 'Enter') { closeDropdown(); handleSearch(); }
     });
 </script>
-
 </body>
-</html>
+    </html>
+        
