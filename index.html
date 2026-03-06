@@ -110,7 +110,6 @@
 
         .dropdown-item:hover { background: rgba(46, 204, 113, 0.1); color: var(--text-word); }
 
-        /* أيقونة السجل (YouTube Style) باستخدام SVG */
         .history-icon {
             width: 20px;
             height: 20px;
@@ -182,7 +181,9 @@
     const resultArea = document.getElementById('resultArea');
     const loader = document.getElementById('loader');
 
-    // أيقونة السجل البرمجية (YouTube Style)
+    // ✅ FIX: flag يمنع فتح القائمة بعد البحث مباشرة
+    let suppressDropdown = false;
+
     const historyIconSVG = `<svg class="history-icon" viewBox="0 0 24 24"><path d="M12 8V12L15 15" /><circle cx="12" cy="12" r="9" /><path d="M3.05 11a9 9 0 0 1 .5-2M3.05 11H1V5" transform="translate(0,0)"/></svg>`;
 
     function applySavedTheme() {
@@ -212,9 +213,16 @@
         dropdown.innerHTML = '';
     }
 
-    input.addEventListener('focus', () => { if (!input.value.trim()) showHistory(); });
+    // ✅ FIX: لا تفتح القائمة إذا كان suppressDropdown مفعّلاً
+    input.addEventListener('focus', () => {
+        if (suppressDropdown) return;
+        if (!input.value.trim()) showHistory();
+    });
 
     input.addEventListener('input', async () => {
+        // ✅ FIX: أي كتابة جديدة تلغي الـ suppress
+        suppressDropdown = false;
+
         const val = input.value.trim().toLowerCase();
         if (!val) { showHistory(); return; }
         if (val.length < 2) { closeDropdown(); return; }
@@ -240,7 +248,6 @@
         items.forEach(item => {
             const div = document.createElement('div');
             div.className = `dropdown-item ${className}`;
-            // إضافة الأيقونة فقط إذا كان العنصر من السجل
             div.innerHTML = (className === 'history-item' ? historyIconSVG : '') + `<span>${item}</span>`;
             div.onclick = () => {
                 input.value = item;
@@ -256,7 +263,11 @@
         const query = input.value.trim();
         if (!query) return;
 
+        // ✅ FIX: أغلق القائمة وامنع إعادة فتحها عند البحث
+        suppressDropdown = true;
         closeDropdown();
+        input.blur(); // أزل الفوكس عن الـ input لمنع حدث focus من إعادة فتح القائمة
+
         resultArea.innerHTML = '';
         loader.style.display = 'block';
 
@@ -296,9 +307,8 @@
     });
 
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') { closeDropdown(); handleSearch(); }
+        if (e.key === 'Enter') { handleSearch(); }
     });
 </script>
 </body>
-    </html>
-        
+</html>
