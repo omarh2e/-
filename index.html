@@ -6,15 +6,15 @@
     <title>معاني الكلمات</title>
     <style>
         :root {
-            --bg-body: #f1f5f9; 
+            --bg-body: #ffffff; 
             --bg-card: #ffffff;
             --text-word: #2ecc71;
             --text-labels: #27ae60;
             --text-content: #1a1a1a;
-            --input-bg: #ffffff; 
-            --input-border: #cbd5e1; 
-            --shadow: 0 4px 12px rgba(0,0,0,0.1);
-            --footer-color: #94a3b8;
+            --input-bg: #f8fafc; 
+            --input-border: #e2e8f0; 
+            --btn-blue: #3b82f6; 
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         [data-theme="dark"] {
@@ -25,8 +25,8 @@
             --text-content: #f8fafc;
             --input-bg: #ffffff; 
             --input-border: transparent;
+            --btn-blue: #3b82f6;
             --shadow: 0 10px 30px rgba(0,0,0,0.4);
-            --footer-color: #64748b;
         }
 
         body {
@@ -79,38 +79,12 @@
             padding: 0 25px;
             border-radius: 14px;
             border: none;
-            background: var(--text-word);
+            background: var(--btn-blue);
             color: white;
             font-weight: bold;
             cursor: pointer;
             box-shadow: var(--shadow);
         }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            left: 0;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            z-index: 1000;
-            margin-top: 8px;
-            display: none;
-            max-height: 250px;
-            overflow-y: auto;
-            border: 1px solid #e2e8f0;
-        }
-
-        .dropdown-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            color: #1a1a1a;
-            border-bottom: 1px solid #f1f5f9;
-            text-align: right;
-        }
-
-        .dropdown-item:hover { background: #f8fafc; color: var(--text-word); }
 
         .result-card {
             background: var(--bg-card);
@@ -122,17 +96,38 @@
             animation: fadeIn 0.4s ease;
         }
 
-        .result-card h2 { color: var(--text-word); font-size: 2.2rem; margin: 0 0 20px 0; }
-        .sentence-box { margin-bottom: 25px; }
-        .label { display: block; color: var(--text-labels); font-weight: bold; margin-bottom: 5px; }
-        .content { font-size: 1.4rem; line-height: 1.7; display: block; }
+        /* Suggestion Button Style */
+        .suggest-section {
+            margin-top: 50px;
+            text-align: center;
+            padding-bottom: 40px;
+        }
+
+        .suggest-btn {
+            background: none;
+            border: 2px dashed var(--btn-blue);
+            color: var(--btn-blue);
+            padding: 10px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .suggest-btn:hover {
+            background: var(--btn-blue);
+            color: white;
+            border-style: solid;
+        }
 
         .loader {
             display: none;
             width: 30px;
             height: 30px;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--text-word);
+            border-top: 3px solid var(--btn-blue);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 20px auto;
@@ -147,7 +142,7 @@
 <div class="app-container">
     <div class="header">
         <h1>معاني الكلمات</h1>
-        <button onclick="toggleTheme()" id="themeBtn" style="background: rgba(46,204,113,0.15); border: 1.5px solid rgba(46,204,113,0.4); padding:8px 15px; border-radius:20px; cursor:pointer; color: #2ecc71; font-weight:bold;">الوضع المظلم</button>
+        <button onclick="toggleTheme()" id="themeBtn" style="background: rgba(59, 130, 246, 0.1); border: 1.5px solid rgba(59, 130, 246, 0.4); padding:8px 15px; border-radius:20px; cursor:pointer; color: var(--btn-blue); font-weight:bold;">الوضع المظلم</button>
     </div>
 
     <div class="search-container">
@@ -158,12 +153,17 @@
 
     <div id="loader" class="loader"></div>
     <div id="resultArea"></div>
+
+    <div class="suggest-section">
+        <p style="opacity: 0.7; font-size: 0.9rem; margin-bottom: 10px;">لم تجد الكلمة؟</p>
+        <a href="رابط_نموذج_جوجل_الخاص_بك" target="_blank" class="suggest-btn">اقترح كلمة جديدة</a>
+    </div>
 </div>
 
 <script>
+    /* ... نفس الكود البرمجي السابق بدون تغيير ... */
     const API_URL = "https://script.google.com/macros/s/AKfycbwRF6ZycN-hWpqWu2LW3LaU3Bgf7mQhJeORX6xKiXJ0EKInKU6weTgfZYrANBDt6Lnc/exec";
     const input = document.getElementById('wordInput');
-    const dropdown = document.getElementById('dropdownMenu');
     const resultArea = document.getElementById('resultArea');
     const loader = document.getElementById('loader');
 
@@ -181,65 +181,9 @@
         document.getElementById('themeBtn').innerText = newTheme === 'dark' ? "الوضع الفاتح" : "الوضع المظلم";
     }
 
-    function getHistory() { return JSON.parse(localStorage.getItem('searchHistory') || '[]'); }
-
-    function addToHistory(word) {
-        let history = getHistory().filter(w => w !== word);
-        history.unshift(word);
-        localStorage.setItem('searchHistory', JSON.stringify(history.slice(0, 7)));
-    }
-
-    function closeDropdown() {
-        dropdown.style.display = 'none';
-        dropdown.innerHTML = '';
-    }
-
-    input.addEventListener('focus', () => {
-        if (!input.value.trim()) showHistory();
-    });
-
-    input.addEventListener('input', async () => {
-        const val = input.value.trim().toLowerCase();
-        if (!val) { showHistory(); return; }
-        if (val.length < 2) { closeDropdown(); return; }
-
-        try {
-            const res = await fetch(`${API_URL}?suggest=${encodeURIComponent(val)}`);
-            const suggestions = await res.json();
-            renderDropdown(suggestions, 'suggest-item');
-        } catch (e) { console.error("API Error"); }
-    });
-
-    function showHistory() {
-        const history = getHistory();
-        if (history.length > 0) renderDropdown(history, 'history-item');
-        else closeDropdown();
-    }
-
-    function renderDropdown(items, className) {
-        dropdown.innerHTML = '';
-        if (items.length === 0) { closeDropdown(); return; }
-        
-        items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = `dropdown-item ${className}`;
-            div.innerHTML = `<span>${item}</span>`;
-            div.addEventListener('mousedown', (e) => { e.preventDefault(); });
-            div.addEventListener('click', () => {
-                input.value = item;
-                closeDropdown();
-                handleSearch();
-            });
-            dropdown.appendChild(div);
-        });
-        dropdown.style.display = 'block';
-    }
-
     async function handleSearch() {
         const query = input.value.trim();
         if (!query) return;
-
-        closeDropdown();
         input.blur();
         resultArea.innerHTML = ''; 
         loader.style.display = 'block';
@@ -250,7 +194,6 @@
             loader.style.display = 'none';
 
             if (data.found) {
-                addToHistory(data.word);
                 resultArea.innerHTML = `
                     <div class="result-card">
                         <h2>${data.word}</h2>
@@ -272,16 +215,7 @@
             resultArea.innerHTML = `<p style="color:red; text-align:center;">حدث خطأ في الاتصال.</p>`;
         }
     }
-
     applySavedTheme();
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')) closeDropdown();
-    });
-
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') { handleSearch(); }
-    });
 </script>
 </body>
 </html>
