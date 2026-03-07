@@ -59,7 +59,7 @@
             margin-bottom: 30px;
         }
 
-        /* تنسيق زر الوضع الشفاف بحدود */
+        /* زر الوضع الشفاف كما في الصورة */
         #themeBtn {
             background: transparent;
             border: 1px solid var(--theme-btn-text);
@@ -99,7 +99,7 @@
             cursor: pointer;
         }
 
-        /* تنسيق البطاقة بالحافة الخضراء العريضة */
+        /* تنسيق البطاقة المطلوب */
         .result-card {
             background: var(--bg-card);
             padding: 30px;
@@ -107,14 +107,14 @@
             box-shadow: var(--shadow);
             margin-top: 20px;
             border-right: 10px solid var(--text-word);
-            animation: fadeIn 0.4s ease;
+            animation: slideUp 0.4s ease;
         }
 
         .result-card h2 { color: var(--text-word); font-size: 2.2rem; margin: 0 0 20px 0; }
         .label { display: block; color: var(--text-labels); font-weight: bold; margin-bottom: 8px; font-size: 1.1rem; }
         .content { font-size: 1.4rem; line-height: 1.7; margin-bottom: 25px; display: block; }
 
-        /* استعادة الـ Loader الأصلي */
+        /* حركة الدوران المستخرجة من الكود القديم */
         .loader {
             display: none;
             width: 30px;
@@ -127,8 +127,9 @@
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* قسم الاقتراحات */
+        /* قسم الاقتراحات مع زر الإغلاق */
         .footer-suggest {
             margin-top: auto;
             padding: 40px 0;
@@ -166,9 +167,6 @@
 
         .suggest-box { display: flex; gap: 8px; margin-top: 10px; }
         .suggest-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: #000; outline: none; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -180,7 +178,7 @@
     </div>
 
     <div class="search-container">
-        <input type="text" id="wordInput" placeholder="أكتب كلمة..." autocomplete="off" onkeypress="if(event.key === 'Enter') handleSearch()">
+        <input type="text" id="wordInput" placeholder="أكتب كلمة..." autocomplete="off" onkeydown="if(event.key==='Enter') handleSearch()">
         <button id="searchBtn" onclick="handleSearch()">بحث</button>
     </div>
 
@@ -207,7 +205,7 @@
     function applySavedTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? "الوضع النهاري" : "الوضع المظلم";
+        document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? "الوضع الفاتح" : "الوضع المظلم";
     }
 
     function toggleTheme() {
@@ -215,7 +213,7 @@
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
-        document.getElementById('themeBtn').innerText = newTheme === 'dark' ? "الوضع النهاري" : "الوضع المظلم";
+        document.getElementById('themeBtn').innerText = newTheme === 'dark' ? "الوضع الفاتح" : "الوضع المظلم";
     }
 
     function showSuggestPanel() {
@@ -233,10 +231,9 @@
         const resArea = document.getElementById('resultArea');
         const loader = document.getElementById('loader');
         const query = input.value.trim();
-        
+
         if (!query) return;
         
-        input.blur(); // إغلاق لوحة المفاتيح في الهواتف
         resArea.innerHTML = '';
         loader.style.display = 'block';
 
@@ -250,16 +247,16 @@
                     <div class="result-card">
                         <h2>${data.word}</h2>
                         <span class="label">الجملة الأولى:</span>
-                        <span class="content">${data.sentence1 || ''}</span>
+                        <span class="content">${data.sentence1}</span>
                         <span class="label">الجملة الثانية:</span>
-                        <span class="content">${data.sentence2 || ''}</span>
+                        <span class="content">${data.sentence2}</span>
                     </div>`;
             } else {
-                resArea.innerHTML = '<p style="text-align:center; opacity:0.6; margin-top:20px;">الكلمة غير موجودة حالياً.</p>';
+                resArea.innerHTML = '<p style="text-align:center; opacity:0.6;">الكلمة غير موجودة.</p>';
             }
         } catch (e) {
             loader.style.display = 'none';
-            resArea.innerHTML = '<p style="color:red; text-align:center;">خطأ في الاتصال بالقاعدة.</p>';
+            resArea.innerHTML = '<p style="color:red; text-align:center;">حدث خطأ في الاتصال.</p>';
         }
     }
 
@@ -277,7 +274,7 @@
         fetch(formURL, { method: "POST", mode: "no-cors", body: formData });
         
         document.getElementById('footerArea').innerHTML = `
-            <div style="color: var(--text-labels); font-weight: bold; animation: fadeIn 0.5s; padding: 20px;">
+            <div style="color: var(--text-labels); font-weight: bold; padding: 20px;">
                 شكراً لك على مساعدة في تطوير موقعنا. ❤️
             </div>`;
     }
