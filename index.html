@@ -14,6 +14,7 @@
             --input-bg: #f8fafc; 
             --input-border: #e2e8f0; 
             --btn-blue: #3b82f6; 
+            --theme-btn-text: #000000; /* نص أسود في الوضع الفاتح */
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
@@ -25,7 +26,7 @@
             --text-content: #f8fafc;
             --input-bg: #ffffff; 
             --input-border: transparent;
-            --btn-blue: #3b82f6;
+            --theme-btn-text: #ffffff; /* نص أبيض في الوضع الداكن */
             --shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
@@ -47,6 +48,8 @@
             max-width: 600px;
             padding: 40px 0;
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
@@ -56,11 +59,22 @@
             margin-bottom: 30px;
         }
 
+        #themeBtn {
+            background: rgba(150, 150, 150, 0.1);
+            border: 1px solid var(--input-border);
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--theme-btn-text); /* تطبيق لون النص المطلوب */
+            transition: all 0.3s;
+        }
+
         .search-container {
             position: relative;
             display: flex;
             gap: 10px;
-            margin-bottom: 5px;
+            margin-bottom: 20px;
         }
 
         input#wordInput {
@@ -68,14 +82,13 @@
             padding: 16px 20px;
             border-radius: 14px;
             border: 2px solid var(--input-border);
-            font-size: 1.1rem;
             background: var(--input-bg);
-            color: #000000; 
+            color: #000000;
             outline: none;
             box-shadow: var(--shadow);
         }
 
-        button#searchBtn {
+        #searchBtn {
             padding: 0 25px;
             border-radius: 14px;
             border: none;
@@ -83,7 +96,6 @@
             color: white;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: var(--shadow);
         }
 
         .result-card {
@@ -91,50 +103,52 @@
             padding: 30px;
             border-radius: 20px;
             box-shadow: var(--shadow);
-            margin-top: 30px;
+            margin-top: 20px;
             border-right: 8px solid var(--text-word);
             animation: fadeIn 0.4s ease;
         }
 
-        /* Suggestion Button Style */
+        .result-card h2 { color: var(--text-word); margin: 0 0 15px 0; }
+        .label { display: block; color: var(--text-labels); font-weight: bold; margin-bottom: 5px; }
+        .content { font-size: 1.2rem; line-height: 1.6; }
+
+        /* Suggestion Section at the very bottom */
         .suggest-section {
-            margin-top: 50px;
+            margin-top: auto; 
+            padding: 40px 0;
             text-align: center;
-            padding-bottom: 40px;
+            width: 100%;
         }
 
-        .suggest-btn {
-            background: none;
-            border: 2px dashed var(--btn-blue);
-            color: var(--btn-blue);
-            padding: 10px 25px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
+        .suggest-box {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            max-width: 450px;
+            margin: 10px auto 0;
         }
 
-        .suggest-btn:hover {
+        .suggest-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: #000;
+            outline: none;
+        }
+
+        .send-btn {
             background: var(--btn-blue);
             color: white;
-            border-style: solid;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        .loader {
-            display: none;
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--btn-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -142,30 +156,27 @@
 <div class="app-container">
     <div class="header">
         <h1>معاني الكلمات</h1>
-        <button onclick="toggleTheme()" id="themeBtn" style="background: rgba(59, 130, 246, 0.1); border: 1.5px solid rgba(59, 130, 246, 0.4); padding:8px 15px; border-radius:20px; cursor:pointer; color: var(--btn-blue); font-weight:bold;">الوضع المظلم</button>
+        <button onclick="toggleTheme()" id="themeBtn">الوضع المظلم</button>
     </div>
 
     <div class="search-container">
         <input type="text" id="wordInput" placeholder="أكتب كلمة..." autocomplete="off">
         <button id="searchBtn" onclick="handleSearch()">بحث</button>
-        <div id="dropdownMenu" class="dropdown-menu"></div>
     </div>
 
-    <div id="loader" class="loader"></div>
     <div id="resultArea"></div>
 
-    <div class="suggest-section">
-        <p style="opacity: 0.7; font-size: 0.9rem; margin-bottom: 10px;">لم تجد الكلمة؟</p>
-        <a href="رابط_نموذج_جوجل_الخاص_بك" target="_blank" class="suggest-btn">اقترح كلمة جديدة</a>
+    <div class="suggest-section" id="suggestArea">
+        <p style="opacity: 0.7; font-size: 0.9rem;">هل لديك كلمة جديدة؟ ساعدنا في التطوير</p>
+        <div class="suggest-box">
+            <input type="text" id="newWordInput" class="suggest-input" placeholder="اكتب الكلمة هنا...">
+            <button onclick="sendNewWord()" id="sendBtn" class="send-btn">ارسال</button>
+        </div>
     </div>
 </div>
 
 <script>
-    /* ... نفس الكود البرمجي السابق بدون تغيير ... */
     const API_URL = "https://script.google.com/macros/s/AKfycbwRF6ZycN-hWpqWu2LW3LaU3Bgf7mQhJeORX6xKiXJ0EKInKU6weTgfZYrANBDt6Lnc/exec";
-    const input = document.getElementById('wordInput');
-    const resultArea = document.getElementById('resultArea');
-    const loader = document.getElementById('loader');
 
     function applySavedTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -182,17 +193,16 @@
     }
 
     async function handleSearch() {
+        const input = document.getElementById('wordInput');
+        const resultArea = document.getElementById('resultArea');
         const query = input.value.trim();
         if (!query) return;
-        input.blur();
-        resultArea.innerHTML = ''; 
-        loader.style.display = 'block';
+
+        resultArea.innerHTML = '<p style="text-align:center;">جاري البحث...</p>';
 
         try {
             const res = await fetch(`${API_URL}?q=${encodeURIComponent(query)}`);
             const data = await res.json();
-            loader.style.display = 'none';
-
             if (data.found) {
                 resultArea.innerHTML = `
                     <div class="result-card">
@@ -205,16 +215,39 @@
                             <span class="label">الجملة الثانية:</span>
                             <span class="content">${data.sentence2 || ''}</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             } else {
-                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">عذراً، الكلمة غير موجودة.</p>`;
+                resultArea.innerHTML = `<p style="text-align:center; opacity:0.6;">الكلمة غير موجودة.</p>`;
             }
         } catch (e) {
-            loader.style.display = 'none';
-            resultArea.innerHTML = `<p style="color:red; text-align:center;">حدث خطأ في الاتصال.</p>`;
+            resultArea.innerHTML = `<p style="color:red; text-align:center;">خطأ في الاتصال.</p>`;
         }
     }
+
+    async function sendNewWord() {
+        const wordInput = document.getElementById('newWordInput');
+        const suggestArea = document.getElementById('suggestArea');
+        const word = wordInput.value.trim();
+        if (!word) return;
+
+        // ملاحظة: يجب وضع رابط Google Form الحقيقي هنا ليعمل الإرسال
+        const formURL = "https://docs.google.com/forms/d/e/YOUR_FORM_ID/formResponse";
+        const entryID = "entry.123456789"; 
+
+        const formData = new FormData();
+        formData.append(entryID, word);
+
+        try {
+            fetch(formURL, { method: "POST", mode: "no-cors", body: formData });
+            suggestArea.innerHTML = `
+                <div style="animation: fadeIn 0.5s; color: var(--text-labels); font-weight: bold; padding: 20px;">
+                    شكراً لك على مساعدة في تطوير موقعنا. ❤️
+                </div>`;
+        } catch (e) {
+            alert("حدث خطأ");
+        }
+    }
+
     applySavedTheme();
 </script>
 </body>
